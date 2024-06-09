@@ -10,6 +10,8 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
+
 public class Manhunt extends JavaPlugin {
 
     private final ManhuntGame manhuntGame = new ManhuntGame(this);
@@ -26,24 +28,52 @@ public class Manhunt extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        String commandName = command.getName().toLowerCase();
+        switch (commandName) {
+            case "startmanhunt":
+                    return handleStartManhunt(sender);
+            case "stopmanhunt":
+                return handleStopManhunt(sender);
+            case "manhuntinfo":
+                return handleManhuntInfo(sender);
+            case "addhunter":
+                return handlePlayerCommand(
+                        sender,
+                        args,
+                        manhuntGame::addHunter,
+                        "added to the hunter team",
+                        label
+                );
+            case "removehunter":
+                return handlePlayerCommand(
+                        sender,
+                        args,
+                        manhuntGame::removeHunter,
+                        "removed from the hunter team",
+                        label
+                );
+            case "setrunner":
+                return handlePlayerCommand(
+                        sender,
+                        args,
+                        manhuntGame::setRunner,
+                        "set as the runner",
+                        label
+                );
+            case "test":
+                return handTestScenario(sender);
+        }
 
         if (command.getName().equalsIgnoreCase("startManhunt")) {
-            boolean gameStarted = manhuntGame.startGame();
-            if (!gameStarted) {
-                sender.sendMessage(Component.text("Teams have not been set up"));
-                return false;
-            }
-            getServer().getPluginManager().registerEvents(manhuntGame, this);
-
-            sender.sendMessage(Component.text("Manhunt game started"));
-            return true;
+            return handleStartManhunt(sender);
         }
 
         if (command.getName().equalsIgnoreCase("stopManhunt")) {
-            manhuntGame.stopGame();
-            HandlerList.unregisterAll((Plugin)this);
-            sender.sendMessage(Component.text("Manhunt game has stopped"));
-            return true;
+            return handleStopManhunt(sender);
+        }
+
+        if (command.getName().equalsIgnoreCase("manhuntInfo")) {
+            return handleManhuntInfo(sender);
         }
 
         if (command.getName().equalsIgnoreCase("addHunter")) {
@@ -76,6 +106,42 @@ public class Manhunt extends JavaPlugin {
             );
         }
         return false;
+    }
+
+    private boolean handTestScenario(CommandSender sender) {
+        manhuntGame.addHunter(getServer().getPlayer(sender.getName()));
+        manhuntGame.setRunner(getServer().getPlayer(sender.getName()));
+        return handleManhuntInfo(sender);
+    }
+
+    private boolean handleManhuntInfo(CommandSender sender) {
+        List<String> playerList = manhuntGame.getHunterNames();
+        sender.sendMessage(Component.text("Hunters: ").color(NamedTextColor.RED));
+        sender.sendMessage(Component.text("----------").color(NamedTextColor.RED));
+        playerList.forEach(name -> sender.sendMessage(Component.text("- " + name).color(NamedTextColor.RED)));
+
+        String runnerName = manhuntGame.getRunnerName();
+        sender.sendMessage(Component.text("Runner: " + runnerName).color(NamedTextColor.GREEN));
+        return true;
+    }
+
+    private boolean handleStopManhunt(CommandSender sender) {
+        manhuntGame.stopGame();
+        HandlerList.unregisterAll((Plugin)this);
+        sender.sendMessage(Component.text("Manhunt game has stopped"));
+        return true;
+    }
+
+    private boolean handleStartManhunt(CommandSender sender) {
+        boolean gameStarted = manhuntGame.startGame();
+        if (!gameStarted) {
+            sender.sendMessage(Component.text("Teams have not been set up"));
+            return false;
+        }
+        getServer().getPluginManager().registerEvents(manhuntGame, this);
+
+        sender.sendMessage(Component.text("Manhunt game started"));
+        return true;
     }
 
     private boolean handlePlayerCommand(CommandSender sender, String[] args, PlayerAction action, String successMessage, String commandLabel) {

@@ -14,7 +14,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ManhuntGame implements Listener {
     private final List<Player> hunters = new ArrayList<>();
@@ -27,6 +29,15 @@ public class ManhuntGame implements Listener {
         this.plugin = plugin;
     }
 
+    public List<String> getHunterNames(){
+        if (hunters.size() == 0) return Collections.emptyList();
+        return hunters.stream().map(Player::getName).collect(Collectors.toList());
+    }
+
+    public String getRunnerName() {
+        if (runner == null) return "No runner selected.";
+        return runner.getName();
+    }
     public void addHunter(Player p) {
         if (!hunters.contains(p)) {
             hunters.add(p);

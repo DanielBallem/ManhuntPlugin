@@ -19,3 +19,9 @@ commands:
   setRunner:
     description: Sets a player to be the runner
     usage: /<command> <playerName>
+  manhuntInfo:
+    description: Outputs the current list of players included in the game
+    usage: /<command>
+  test:
+    description: Test scenario to go through the flow.
+    usage: /<command>
