@@ -71,4 +71,11 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/DanielBallem/ManhuntPlugin</url>
+        </repository>
+    </distributionManagement>
 </project>
