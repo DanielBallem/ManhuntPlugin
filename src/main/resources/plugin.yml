@@ -1,0 +1,21 @@
+name: Manhunt
+version: '${project.version}'
+main: dan.plugin.manhunt.Manhunt
+api-version: '1.20'
+
+commands:
+  startManhunt:
+    description: Start the manhunt game
+    usage: /<command>
+  stopManhunt:
+    description: Stops the manhunt game
+    usage: /<command>
+  addHunter:
+    description: Adds a player to the hunter team
+    usage: /<command> <playerName>
+  removeHunter:
+    description: Removes a player from the hunter team
+    usage: /<command> <playerName>
+  setRunner:
+    description: Sets a player to be the runner
+    usage: /<command> <playerName>
