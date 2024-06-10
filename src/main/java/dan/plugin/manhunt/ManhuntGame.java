@@ -1,5 +1,6 @@
 package dan.plugin.manhunt;
 
+import dan.plugin.manhunt.utils.MessageUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -23,7 +24,7 @@ public class ManhuntGame implements Listener {
     private final List<Player> hunters = new ArrayList<>();
     private Player runner = null;
     private int taskId = -1;
-    private final Manhunt plugin;
+    public final Manhunt plugin;
 
     public boolean GAME_OPTION_RUNNER_ENFORCEMENT = false;
 
