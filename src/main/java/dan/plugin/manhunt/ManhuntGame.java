@@ -31,7 +31,7 @@ public class ManhuntGame implements Listener {
         this.plugin = plugin;
     }
 
-    public List<String> getHunterNames(){
+    public List<String> getHunterNames() {
         if (hunters.size() == 0) return Collections.emptyList();
         return hunters.stream().map(Player::getName).collect(Collectors.toList());
     }
@@ -41,44 +41,44 @@ public class ManhuntGame implements Listener {
         return runner.getName();
     }
 
-public void addHunter(Player p) {
-    if (GAME_OPTION_RUNNER_ENFORCEMENT) {
-        if (runner != null && runner.equals(p)) {
-            runner = null;
-            p.sendMessage(Component.text("You are no longer the runner.").color(NamedTextColor.YELLOW));
+    public void addHunter(Player p) {
+        if (GAME_OPTION_RUNNER_ENFORCEMENT) {
+            if (runner != null && runner.equals(p)) {
+                runner = null;
+                MessageUtils.sendWarning("You are no longer the runner.", p);
+            }
         }
-    }
 
-    // It errors if it's not synchronized, I'm not sure why
-    synchronized (hunters) {
-        if (!hunters.contains(p)) {
-            hunters.add(p);
-            p.sendMessage(Component.text("You have been added to the hunter team").color(NamedTextColor.GREEN));
+        // It errors if it's not synchronized, I'm not sure why
+        synchronized (hunters) {
+            if (!hunters.contains(p)) {
+                hunters.add(p);
+                MessageUtils.sendConfirmation("You have been added to the hunter team", p);
+            }
         }
     }
-}
 
     public void removeRunner() {
         if (runner == null) return;
         Player p = runner;
-        p.sendMessage(Component.text("You are no longer the runner").color(NamedTextColor.YELLOW));
+        MessageUtils.sendWarning("You are no longer the runner", p);
         runner = null;
     }
 
     public void removeHunter(Player p) {
         if (hunters.contains(p)) {
             hunters.remove(p);
-            p.sendMessage(Component.text("You've been removed from the hunter team").color(NamedTextColor.YELLOW));
+            MessageUtils.sendWarning("You've been removed from the hunter team", p);
         }
     }
 
     public void setRunner(Player p) {
-        if (runner != null) {
-            runner.sendMessage(Component.text("You are no longer the runner").color(NamedTextColor.YELLOW));
+        if (runner != null && !runner.equals(p)) {
+            MessageUtils.sendWarning("You are being swapped for another runner.", runner);
         }
         if (GAME_OPTION_RUNNER_ENFORCEMENT) {
-            if (hunters.contains(p)){
-            removeHunter(p);
+            if (hunters.contains(p)) {
+                removeHunter(p);
             }
         }
         runner = p;
@@ -101,20 +101,20 @@ public void addHunter(Player p) {
 
     public boolean startGame(CommandSender sender) {
         if (!canGameStart()) {
-            sender.sendMessage(Component.text("Hunter and runner teams are both not setup.").color(NamedTextColor.RED));
+            MessageUtils.sendError("Hunter and runner teams are both not setup.", sender);
             return false;
         }
         if (GAME_OPTION_RUNNER_ENFORCEMENT && hunters.contains(runner)) {
-            sender.sendMessage(Component.text("Cannot start the game until no hunter is a runner.").color(NamedTextColor.RED));
+            MessageUtils.sendError("Cannot start the game until no hunter is a runner.", sender);
             return false;
         }
 
         //setup players
         for (Player p : hunters) {
-            p.sendMessage(Component.text("Start hunting! The game has started").color(NamedTextColor.GREEN));
+            MessageUtils.sendConfirmation("Start hunting! The game has started", p);
             p.getInventory().addItem(new ItemStack(Material.COMPASS));
         }
-        runner.sendMessage(Component.text("Start running! The game has started").color(NamedTextColor.GREEN));
+        MessageUtils.sendConfirmation("Start running! The game has started", runner);
 
         startCompassUpdateTask();
         return true;
@@ -122,9 +122,9 @@ public void addHunter(Player p) {
 
     public void stopGame() {
         for (Player p : hunters) {
-            p.sendMessage(Component.text("The game has stopped").color(NamedTextColor.YELLOW));
+            MessageUtils.sendWarning("The game has stopped", p);
         }
-        runner.sendMessage(Component.text("The game has stopped").color(NamedTextColor.YELLOW));
+        MessageUtils.sendWarning("The game has stopped", runner);
 
         stopCompassUpdateTask();
     }

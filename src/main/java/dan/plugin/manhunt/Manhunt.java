@@ -31,7 +31,7 @@ public class Manhunt extends JavaPlugin {
         String commandName = command.getName().toLowerCase();
         switch (commandName) {
             case "startmanhunt":
-                    return handleStartManhunt(sender);
+                return handleStartManhunt(sender);
             case "stopmanhunt":
                 return handleStopManhunt(sender);
             case "manhuntinfo":
@@ -72,7 +72,7 @@ public class Manhunt extends JavaPlugin {
 
     private boolean handleRemoveRunner(CommandSender sender, String[] args) {
         if (args.length != 0) {
-            sender.sendMessage(Component.text("Usage: /yourcommand").color(NamedTextColor.RED));
+            MessageUtils.sendError("Usage: /yourcommand", sender);
             return false;
         }
         manhuntGame.removeRunner();
@@ -81,16 +81,16 @@ public class Manhunt extends JavaPlugin {
 
     private boolean handleRunnerEnforcement(CommandSender sender, String[] args) {
         if (args.length != 1) {
-            sender.sendMessage(Component.text("Usage: /yourcommand <true|false>").color(NamedTextColor.RED));
+            MessageUtils.sendError("Usage: /yourcommand <true|false>", sender);
             return false;
         }
 
         if ("true".equalsIgnoreCase(args[0]) || "false".equalsIgnoreCase(args[0])) {
             manhuntGame.GAME_OPTION_RUNNER_ENFORCEMENT = "true".equalsIgnoreCase(args[0]);
-            sender.sendMessage(Component.text("Runner enforcement is set to " + manhuntGame.GAME_OPTION_RUNNER_ENFORCEMENT).color(NamedTextColor.GREEN));
+            MessageUtils.sendConfirmation("Runner enforcement is set to " + manhuntGame.GAME_OPTION_RUNNER_ENFORCEMENT, sender);
             return true;
         } else {
-            sender.sendMessage(Component.text("Invalid argument. Usage: /yourcommand <true|false>").color(NamedTextColor.RED));
+            MessageUtils.sendError("Invalid argument. Usage: /yourcommand <true|false>", sender);
             return false;
         }
     }
@@ -103,8 +103,6 @@ public class Manhunt extends JavaPlugin {
                 "added to the hunter team",
                 label
         );
-
-
         handlePlayerCommand(
                 sender,
                 new String[]{sender.getName()}, //player name as a test arg.
@@ -118,18 +116,18 @@ public class Manhunt extends JavaPlugin {
 
     private boolean handleManhuntInfo(CommandSender sender) {
         List<String> playerList = manhuntGame.getHunterNames();
-        sender.sendMessage(Component.text("Hunters: ").color(NamedTextColor.RED));
-        sender.sendMessage(Component.text("----------").color(NamedTextColor.RED));
-        playerList.forEach(name -> sender.sendMessage(Component.text("- " + name).color(NamedTextColor.RED)));
+        MessageUtils.sendMessage("Hunters: ", sender, NamedTextColor.RED);
+        MessageUtils.sendMessage("----------", sender, NamedTextColor.RED);
+        playerList.forEach(name -> MessageUtils.sendMessage("- " + name, sender, NamedTextColor.RED));
 
         String runnerName = manhuntGame.getRunnerName();
-        sender.sendMessage(Component.text("Runner: " + runnerName).color(NamedTextColor.GREEN));
+        MessageUtils.sendMessage("Runner: " + runnerName, sender, NamedTextColor.GREEN);
         return true;
     }
 
     private boolean handleStopManhunt(CommandSender sender) {
         manhuntGame.stopGame();
-        HandlerList.unregisterAll((Plugin)this);
+        HandlerList.unregisterAll(this);
         sender.sendMessage(Component.text("Manhunt game has stopped"));
         return true;
     }
@@ -154,12 +152,12 @@ public class Manhunt extends JavaPlugin {
 
         Player player = getServer().getPlayer(args[0]);
         if (player == null) {
-            sender.sendMessage(Component.text("Player not found").color(NamedTextColor.RED));
+            MessageUtils.sendError("Player not found", sender);
             return false;
         }
 
         action.execute(player);
-        sender.sendMessage(Component.text(player.getName() + " has been " + successMessage).color(NamedTextColor.GREEN));
+        MessageUtils.sendConfirmation(player.getName() + " has been " + successMessage, sender);
         return true;
     }
 }
