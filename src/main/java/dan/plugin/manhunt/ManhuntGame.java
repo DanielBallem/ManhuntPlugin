@@ -5,6 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,8 +23,9 @@ public class ManhuntGame implements Listener {
     private final List<Player> hunters = new ArrayList<>();
     private Player runner = null;
     private int taskId = -1;
-
     private final Manhunt plugin;
+
+    public boolean GAME_OPTION_RUNNER_ENFORCEMENT = false;
 
     public ManhuntGame(Manhunt plugin) {
         this.plugin = plugin;
@@ -38,11 +40,29 @@ public class ManhuntGame implements Listener {
         if (runner == null) return "No runner selected.";
         return runner.getName();
     }
-    public void addHunter(Player p) {
+
+public void addHunter(Player p) {
+    if (GAME_OPTION_RUNNER_ENFORCEMENT) {
+        if (runner != null && runner.equals(p)) {
+            runner = null;
+            p.sendMessage(Component.text("You are no longer the runner.").color(NamedTextColor.YELLOW));
+        }
+    }
+
+    // It errors if it's not synchronized, I'm not sure why
+    synchronized (hunters) {
         if (!hunters.contains(p)) {
             hunters.add(p);
             p.sendMessage(Component.text("You have been added to the hunter team").color(NamedTextColor.GREEN));
         }
+    }
+}
+
+    public void removeRunner() {
+        if (runner == null) return;
+        Player p = runner;
+        p.sendMessage(Component.text("You are no longer the runner").color(NamedTextColor.YELLOW));
+        runner = null;
     }
 
     public void removeHunter(Player p) {
@@ -56,10 +76,11 @@ public class ManhuntGame implements Listener {
         if (runner != null) {
             runner.sendMessage(Component.text("You are no longer the runner").color(NamedTextColor.YELLOW));
         }
-        //Add this back in when I want to enforce this again (I'm testing by myself)
-        //if (hunters.contains(p)){
-        //removeHunter(p);
-        //}
+        if (GAME_OPTION_RUNNER_ENFORCEMENT) {
+            if (hunters.contains(p)){
+            removeHunter(p);
+            }
+        }
         runner = p;
         p.sendMessage(Component.text("You are now the runner").color(NamedTextColor.GREEN));
     }
@@ -78,9 +99,17 @@ public class ManhuntGame implements Listener {
         hunters.remove(player); //if player is not in hunters this does nothing.
     }
 
-    public boolean startGame() {
-        if (!canGameStart()) return false;
+    public boolean startGame(CommandSender sender) {
+        if (!canGameStart()) {
+            sender.sendMessage(Component.text("Hunter and runner teams are both not setup.").color(NamedTextColor.RED));
+            return false;
+        }
+        if (GAME_OPTION_RUNNER_ENFORCEMENT && hunters.contains(runner)) {
+            sender.sendMessage(Component.text("Cannot start the game until no hunter is a runner.").color(NamedTextColor.RED));
+            return false;
+        }
 
+        //setup players
         for (Player p : hunters) {
             p.sendMessage(Component.text("Start hunting! The game has started").color(NamedTextColor.GREEN));
             p.getInventory().addItem(new ItemStack(Material.COMPASS));

@@ -19,9 +19,16 @@ commands:
   setRunner:
     description: Sets a player to be the runner
     usage: /<command> <playerName>
+  removeRunner:
+    description: Removes the runner
+    usage: /<command>
+
   manhuntInfo:
     description: Outputs the current list of players included in the game
     usage: /<command>
+  runnerEnforcement:
+    description: Option that controls if the runner can also be a hunter. (Use for testing purposes. 1 person :D ). Off by default.
+    usage: /<command> <true|false>
   test:
     description: Test scenario to go through the flow.
     usage: /<command>
