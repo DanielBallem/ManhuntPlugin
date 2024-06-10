@@ -6,8 +6,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.HandlerList;
 
-import static org.bukkit.Bukkit.getServer;
-
 public class StopManhuntCommand extends BaseManhuntCommand{
 
     public StopManhuntCommand(ManhuntGame game) {

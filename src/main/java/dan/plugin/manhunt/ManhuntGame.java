@@ -1,6 +1,7 @@
 package dan.plugin.manhunt;
 
 import dan.plugin.manhunt.utils.MessageUtils;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -15,9 +16,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ManhuntGame implements Listener {
@@ -112,21 +111,16 @@ public class ManhuntGame implements Listener {
 
         //setup players
         for (Player p : hunters) {
-            MessageUtils.sendConfirmation("Start hunting! The game has started", p);
             p.getInventory().addItem(new ItemStack(Material.COMPASS));
         }
-        MessageUtils.sendConfirmation("Start running! The game has started", runner);
 
+        messageAllPlayers("The game has started!", NamedTextColor.GREEN);
         startCompassUpdateTask();
         return true;
     }
 
     public void stopGame() {
-        for (Player p : hunters) {
-            MessageUtils.sendWarning("The game has stopped", p);
-        }
-        MessageUtils.sendWarning("The game has stopped", runner);
-
+        messageAllPlayers("The game has stopped", NamedTextColor.RED);
         stopCompassUpdateTask();
     }
 
@@ -157,5 +151,13 @@ public class ManhuntGame implements Listener {
 
     public boolean canGameStart() {
         return runner != null && hunters.size() != 0;
+    }
+
+    public void messageAllPlayers(String message, NamedTextColor color) {
+        Set<Audience> players = new HashSet<>(hunters);
+        if (runner != null) {
+            players.add(runner);
+        }
+        MessageUtils.sendAllPlayersAMessage(message, players, color);
     }
 }

@@ -1,7 +1,6 @@
 package dan.plugin.manhunt.commands;
 
 import dan.plugin.manhunt.ManhuntGame;
-import dan.plugin.manhunt.interfaces.SubCommand;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;

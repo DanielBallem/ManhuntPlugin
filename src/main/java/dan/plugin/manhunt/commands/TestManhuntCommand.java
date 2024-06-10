@@ -1,10 +1,9 @@
 package dan.plugin.manhunt.commands;
 
 import dan.plugin.manhunt.ManhuntGame;
-import net.kyori.adventure.text.Component;
+import dan.plugin.manhunt.utils.MessageUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.HandlerList;
 
 public class TestManhuntCommand extends BaseManhuntCommand{
 
@@ -12,22 +11,48 @@ public class TestManhuntCommand extends BaseManhuntCommand{
         super(game);
     }
 
+    //for my testing purposes because unit testing for this thing is WACK.
+    //This will go through the flow of the commands.
     @Override
     public boolean execute(CommandSender sender, Command command, String label, String[] args) {
-        handlePlayerCommand(
-                sender,
-                new String[]{sender.getName()}, //player name as a test arg.
-                manhuntGame::addHunter,
-                "added to the hunter team",
-                label
-        );
-        handlePlayerCommand(
-                sender,
-                new String[]{sender.getName()}, //player name as a test arg.
-                manhuntGame::setRunner,
-                "set as the runner",
-                label
-        );
+        AddHunterCommand addHunter = new AddHunterCommand(this.manhuntGame);
+        SetRunnerCommand addRunner = new SetRunnerCommand(this.manhuntGame);
+        RemoveHunterCommand removeHunter = new RemoveHunterCommand(this.manhuntGame);
+        RemoveRunnerCommand removeRunner = new RemoveRunnerCommand(this.manhuntGame);
+        StartManhuntCommand startGame = new StartManhuntCommand(this.manhuntGame);
+        StopManhuntCommand stopGame = new StopManhuntCommand(this.manhuntGame);
+
+        this.manhuntGame.GAME_OPTION_RUNNER_ENFORCEMENT = false;
+        String[] playerArg = new String[]{sender.getName()};
+        addHunter.execute(sender, command, label, playerArg);
+        addRunner.execute(sender, command, label, playerArg);
+
+        //should be true
+        boolean matching = this.manhuntGame.getHunterNames().get(0).equalsIgnoreCase(this.manhuntGame.getRunnerName());
+        MessageUtils.sendConfirmation("Players Match: " + matching, sender);
+
+        startGame.execute(sender, command, label, args);
+        stopGame.execute(sender, command, label, args);
+
+        //should not start
+        this.manhuntGame.GAME_OPTION_RUNNER_ENFORCEMENT = true;
+        MessageUtils.sendConfirmation("Should not start:", sender);
+        startGame.execute(sender, command, label, args);
+        stopGame.execute(sender, command, label, args);
+
+        //adding a runner with enforcement on removes the hunter
+        addRunner.execute(sender, command, label, playerArg);
+        int hunterCount = this.manhuntGame.getHunterNames().size();
+
+        MessageUtils.sendConfirmation("Should have 0 hunters: " + hunterCount, sender);
+        MessageUtils.sendConfirmation("Should have 1 runner: " + this.manhuntGame.getRunnerName(), sender);
+
+        //adding a hunter now. Should remove the runner.
+        addHunter.execute(sender, command, label, playerArg);
+
+        hunterCount = this.manhuntGame.getHunterNames().size();
+        MessageUtils.sendConfirmation("Should have 1 hunter: " + hunterCount, sender);
+        MessageUtils.sendConfirmation("Should have 0 runner: " + this.manhuntGame.getRunnerName(), sender);
 
         return new ManhuntInfoCommand(this.manhuntGame).execute(sender, command, label, args);
     }
