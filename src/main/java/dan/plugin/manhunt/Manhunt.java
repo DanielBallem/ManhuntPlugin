@@ -36,6 +36,8 @@ public class Manhunt extends JavaPlugin {
                 return handleStopManhunt(sender);
             case "manhuntinfo":
                 return handleManhuntInfo(sender);
+            case "runnerenforcement":
+                return handleRunnerEnforcement(sender, args);
             case "addhunter":
                 return handlePlayerCommand(
                         sender,
@@ -60,57 +62,57 @@ public class Manhunt extends JavaPlugin {
                         "set as the runner",
                         label
                 );
+            case "removerunner":
+                return handleRemoveRunner(sender, args);
             case "test":
-                return handTestScenario(sender);
-        }
-
-        if (command.getName().equalsIgnoreCase("startManhunt")) {
-            return handleStartManhunt(sender);
-        }
-
-        if (command.getName().equalsIgnoreCase("stopManhunt")) {
-            return handleStopManhunt(sender);
-        }
-
-        if (command.getName().equalsIgnoreCase("manhuntInfo")) {
-            return handleManhuntInfo(sender);
-        }
-
-        if (command.getName().equalsIgnoreCase("addHunter")) {
-            return handlePlayerCommand(
-                    sender,
-                    args,
-                    manhuntGame::addHunter,
-                    "added to the hunter team",
-                    label
-            );
-        }
-
-        if (command.getName().equalsIgnoreCase("removeHunter")) {
-            return handlePlayerCommand(
-                    sender,
-                    args,
-                    manhuntGame::removeHunter,
-                    "removed from the hunter team",
-                    label
-            );
-        }
-
-        if (command.getName().equalsIgnoreCase("setRunner")) {
-            return handlePlayerCommand(
-                    sender,
-                    args,
-                    manhuntGame::setRunner,
-                    "set as the runner",
-                    label
-            );
+                return handTestScenario(sender, args, label);
         }
         return false;
     }
 
-    private boolean handTestScenario(CommandSender sender) {
-        manhuntGame.addHunter(getServer().getPlayer(sender.getName()));
-        manhuntGame.setRunner(getServer().getPlayer(sender.getName()));
+    private boolean handleRemoveRunner(CommandSender sender, String[] args) {
+        if (args.length != 0) {
+            sender.sendMessage(Component.text("Usage: /yourcommand").color(NamedTextColor.RED));
+            return false;
+        }
+        manhuntGame.removeRunner();
+        return true;
+    }
+
+    private boolean handleRunnerEnforcement(CommandSender sender, String[] args) {
+        if (args.length != 1) {
+            sender.sendMessage(Component.text("Usage: /yourcommand <true|false>").color(NamedTextColor.RED));
+            return false;
+        }
+
+        if ("true".equalsIgnoreCase(args[0]) || "false".equalsIgnoreCase(args[0])) {
+            manhuntGame.GAME_OPTION_RUNNER_ENFORCEMENT = "true".equalsIgnoreCase(args[0]);
+            sender.sendMessage(Component.text("Runner enforcement is set to " + manhuntGame.GAME_OPTION_RUNNER_ENFORCEMENT).color(NamedTextColor.GREEN));
+            return true;
+        } else {
+            sender.sendMessage(Component.text("Invalid argument. Usage: /yourcommand <true|false>").color(NamedTextColor.RED));
+            return false;
+        }
+    }
+
+    private boolean handTestScenario(CommandSender sender, String[] args, String label) {
+        handlePlayerCommand(
+                sender,
+                new String[]{sender.getName()}, //player name as a test arg.
+                manhuntGame::addHunter,
+                "added to the hunter team",
+                label
+        );
+
+
+        handlePlayerCommand(
+                sender,
+                new String[]{sender.getName()}, //player name as a test arg.
+                manhuntGame::setRunner,
+                "set as the runner",
+                label
+        );
+
         return handleManhuntInfo(sender);
     }
 
@@ -133,9 +135,9 @@ public class Manhunt extends JavaPlugin {
     }
 
     private boolean handleStartManhunt(CommandSender sender) {
-        boolean gameStarted = manhuntGame.startGame();
+        boolean gameStarted = manhuntGame.startGame(sender);
         if (!gameStarted) {
-            sender.sendMessage(Component.text("Teams have not been set up"));
+            sender.sendMessage(Component.text("Failed to start manhunt"));
             return false;
         }
         getServer().getPluginManager().registerEvents(manhuntGame, this);
