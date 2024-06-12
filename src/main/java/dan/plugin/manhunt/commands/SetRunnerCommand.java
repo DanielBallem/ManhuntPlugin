@@ -15,7 +15,7 @@ public class SetRunnerCommand extends BaseManhuntCommand{
         return handlePlayerCommand(
                 sender,
                 args,
-                manhuntGame::setRunner,
+                manhuntGame::setRunnerTeam,
                 "set as the runner",
                 label
         );

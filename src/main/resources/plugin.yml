@@ -22,7 +22,6 @@ commands:
   removeRunner:
     description: Removes the runner
     usage: /<command>
-
   manhuntInfo:
     description: Outputs the current list of players included in the game
     usage: /<command>
