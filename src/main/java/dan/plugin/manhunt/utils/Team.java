@@ -21,6 +21,13 @@ public class Team implements List<Player> {
         this.players = new ArrayList<>();
     }
 
+    public Set<Player> getPlayers() {
+        synchronized (players) {
+            return Collections.unmodifiableSet(new HashSet<>(players));
+        }
+    }
+
+
     @Override
     public boolean add(Player player) {
         synchronized (players) {

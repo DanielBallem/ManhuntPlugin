@@ -20,79 +20,24 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ManhuntGame implements Listener {
-//    private final List<Player> hunters = new ArrayList<>();
-    public final Team hunterTeam = new Team("hunters");
-    public final Team runnerTeam = new Team("runner", 1);
+
     public final OptionManager optionManager;
-//    public final ManhuntTeamManager teamManager = new ManhuntTeamManager();
-//    private Player runner = null;
+    public final ManhuntTeamManager teamManager;
     private int taskId = -1;
     public final Manhunt plugin;
 
     public ManhuntGame(Manhunt plugin, OptionManager optionManager) {
         this.plugin = plugin;
         this.optionManager = optionManager;
+        teamManager = new ManhuntTeamManager(optionManager);
     }
 
-    public List<String> getHunterNames() {
-        if (hunterTeam.size() == 0) return Collections.emptyList();
-        return hunterTeam.stream().map(Player::getName).collect(Collectors.toList());
-    }
 
-    public String getRunnerName() {
-        if (runnerTeam.isEmpty()) return "No runner selected.";
-        return runnerTeam.get(0).getName();
-    }
-
-    public void addHunter(Player p) {
-        if (optionManager.getBooleanOption(OptionConstants.PREVENT_TEAM_OVERLAP)) {
-            if (!runnerTeam.isEmpty() && runnerTeam.contains(p)) {
-                runnerTeam.clear();
-                MessageUtils.sendWarning("You are no longer the runner.", p);
-            }
-        }
-
-        // It errors if it's not synchronized, I'm not sure why
-        synchronized (hunterTeam) {
-            if (!hunterTeam.contains(p)) {
-                hunterTeam.add(p);
-                MessageUtils.sendConfirmation("You have been added to the hunter team", p);
-            }
-        }
-    }
-
-    public void removeRunner() {
-        if (runnerTeam.isEmpty()) return;
-        Player p = runnerTeam.get(0);
-        MessageUtils.sendWarning("You are no longer the runner", p);
-        runnerTeam.remove(p);
-    }
-
-    public void removeHunter(Player p) {
-        if (hunterTeam.contains(p)) {
-            hunterTeam.remove(p);
-            MessageUtils.sendWarning("You've been removed from the hunter team", p);
-        }
-    }
-
-    public void setRunnerTeam(Player p) {
-        if (!runnerTeam.isEmpty() && !runnerTeam.get(0).equals(p)) {
-            MessageUtils.sendWarning("You are being swapped for another runner.", runnerTeam.get(0));
-        }
-        if (optionManager.getBooleanOption(OptionConstants.PREVENT_TEAM_OVERLAP)) {
-            if (hunterTeam.contains(p)) {
-                removeHunter(p);
-            }
-        }
-        runnerTeam.clear();
-        runnerTeam.add(p);
-        p.sendMessage(Component.text("You are now the runner").color(NamedTextColor.GREEN));
-    }
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
-        if (hunterTeam.contains(player)) {
+        if (teamManager.hunterTeam.contains(player)) {
             player.getInventory().addItem(new ItemStack(Material.COMPASS));
         }
     }
@@ -100,14 +45,14 @@ public class ManhuntGame implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        hunterTeam.remove(player); //if player is not in hunters this does nothing.
+        teamManager.removeHunter(player);
     }
 
     public boolean startGame(CommandSender sender) {
         if (!canGameStart(sender)) return false;
 
         //setup players
-        for (Player p : hunterTeam) {
+        for (Player p : teamManager.hunterTeam) {
             p.getInventory().addItem(new ItemStack(Material.COMPASS));
         }
 
@@ -122,8 +67,8 @@ public class ManhuntGame implements Listener {
             return false;
         }
         if (optionManager.getBooleanOption(OptionConstants.PREVENT_TEAM_OVERLAP)) {
-            for (Player runner : runnerTeam) {
-                if (hunterTeam.contains(runner)) {
+            for (Player runner : teamManager.runnerTeam) {
+                if (teamManager.hunterTeam.contains(runner)) {
                     MessageUtils.sendError("Cannot start the game until no hunter is a runner.", sender);
                     return false;
                 }
@@ -141,19 +86,24 @@ public class ManhuntGame implements Listener {
         if (taskId != -1) {
             Bukkit.getScheduler().cancelTask(taskId);
         }
+        Team runner = teamManager.runnerTeam;
+        Team hunters = teamManager.hunterTeam;
 
         taskId = new BukkitRunnable() {
             @Override
             public void run() {
 
-                if (!runnerTeam.isEmpty()) {
-                    Location loc = runnerTeam.get(0).getLocation();
-                    synchronized (hunterTeam) {
-                        for (Player hunter : hunterTeam) {
-                            hunter.setCompassTarget(loc);
+                if (!runner.isEmpty()) {
+                    Location loc = runner.get(0).getLocation();
+                    synchronized (hunters) {
+                        for (Player hunter : hunters) {
+                            if (hunter != null)
+                                hunter.setCompassTarget(loc);
                         }
                     }
-
+                } else {
+                    stopGame(); //no runner
+                    messageAllPlayers("There is no longer a runner", NamedTextColor.RED);
                 }
             }
         }.runTaskTimer(plugin, 0L, 20L).getTaskId(); // Update every second (20 ticks)
@@ -167,14 +117,38 @@ public class ManhuntGame implements Listener {
     }
 
     public boolean allTeamsAreSetup() {
-        return !runnerTeam.isEmpty() && !hunterTeam.isEmpty();
+        return !teamManager.runnerTeam.isEmpty() && !teamManager.hunterTeam.isEmpty();
     }
 
     public void messageAllPlayers(String message, NamedTextColor color) {
-        Set<Audience> players = new HashSet<>(hunterTeam);
-        if (!runnerTeam.isEmpty()) {
-            players.add(runnerTeam.get(0));
+        Set<Audience> players = new HashSet<>(teamManager.hunterTeam);
+        if (!teamManager.runnerTeam.isEmpty()) {
+            players.add(teamManager.runnerTeam.get(0));
         }
         MessageUtils.sendAllPlayersAMessage(message, players, color);
+    }
+
+    public List<String> getHunterNames() {
+        return teamManager.getHunterNames();
+    }
+
+    public String getRunnerName() {
+        return teamManager.getRunnerName();
+    }
+
+    public void addHunter(Player p) {
+        teamManager.addHunter(p);
+    }
+
+    public void removeRunner() {
+        teamManager.removeRunner();
+    }
+
+    public void removeHunter(Player p) {
+        teamManager.removeHunter(p);
+    }
+
+    public void setRunnerTeam(Player p) {
+        teamManager.setRunnerTeam(p);
     }
 }
