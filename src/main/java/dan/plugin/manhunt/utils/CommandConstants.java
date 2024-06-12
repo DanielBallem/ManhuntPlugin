@@ -4,7 +4,7 @@ public final class CommandConstants {
     public static final String START_MANHUNT = "startmanhunt";
     public static final String STOP_MANHUNT = "stopmanhunt";
     public static final String MANHUNT_INFO = "manhuntinfo";
-    public static final String RUNNER_ENFORCEMENT = "runnerenforcement";
+    public static final String PREVENT_TEAM_OVERLAP_OPTION = "preventteamoverlap";
     public static final String ADD_HUNTER = "addhunter";
     public static final String REMOVE_HUNTER = "removehunter";
     public static final String SET_RUNNER = "setrunner";

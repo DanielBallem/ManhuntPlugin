@@ -1,6 +1,7 @@
 package dan.plugin.manhunt.commands;
 
 import dan.plugin.manhunt.ManhuntGame;
+import dan.plugin.manhunt.utils.OptionManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -8,8 +9,8 @@ import org.bukkit.event.HandlerList;
 
 public class StopManhuntCommand extends BaseManhuntCommand{
 
-    public StopManhuntCommand(ManhuntGame game) {
-        super(game);
+    public StopManhuntCommand(ManhuntGame game, OptionManager optionManager) {
+        super(game, optionManager);
     }
 
     @Override

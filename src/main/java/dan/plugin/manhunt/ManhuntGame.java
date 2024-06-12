@@ -1,6 +1,6 @@
 package dan.plugin.manhunt;
 
-import dan.plugin.manhunt.utils.MessageUtils;
+import dan.plugin.manhunt.utils.*;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -20,75 +20,24 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ManhuntGame implements Listener {
-    private final List<Player> hunters = new ArrayList<>();
-    private Player runner = null;
+
+    public final OptionManager optionManager;
+    public final ManhuntTeamManager teamManager;
     private int taskId = -1;
     public final Manhunt plugin;
 
-    public boolean GAME_OPTION_RUNNER_ENFORCEMENT = false;
-
-    public ManhuntGame(Manhunt plugin) {
+    public ManhuntGame(Manhunt plugin, OptionManager optionManager) {
         this.plugin = plugin;
+        this.optionManager = optionManager;
+        teamManager = new ManhuntTeamManager(optionManager);
     }
 
-    public List<String> getHunterNames() {
-        if (hunters.size() == 0) return Collections.emptyList();
-        return hunters.stream().map(Player::getName).collect(Collectors.toList());
-    }
 
-    public String getRunnerName() {
-        if (runner == null) return "No runner selected.";
-        return runner.getName();
-    }
-
-    public void addHunter(Player p) {
-        if (GAME_OPTION_RUNNER_ENFORCEMENT) {
-            if (runner != null && runner.equals(p)) {
-                runner = null;
-                MessageUtils.sendWarning("You are no longer the runner.", p);
-            }
-        }
-
-        // It errors if it's not synchronized, I'm not sure why
-        synchronized (hunters) {
-            if (!hunters.contains(p)) {
-                hunters.add(p);
-                MessageUtils.sendConfirmation("You have been added to the hunter team", p);
-            }
-        }
-    }
-
-    public void removeRunner() {
-        if (runner == null) return;
-        Player p = runner;
-        MessageUtils.sendWarning("You are no longer the runner", p);
-        runner = null;
-    }
-
-    public void removeHunter(Player p) {
-        if (hunters.contains(p)) {
-            hunters.remove(p);
-            MessageUtils.sendWarning("You've been removed from the hunter team", p);
-        }
-    }
-
-    public void setRunner(Player p) {
-        if (runner != null && !runner.equals(p)) {
-            MessageUtils.sendWarning("You are being swapped for another runner.", runner);
-        }
-        if (GAME_OPTION_RUNNER_ENFORCEMENT) {
-            if (hunters.contains(p)) {
-                removeHunter(p);
-            }
-        }
-        runner = p;
-        p.sendMessage(Component.text("You are now the runner").color(NamedTextColor.GREEN));
-    }
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
-        if (hunters.contains(player)) {
+        if (teamManager.hunterTeam.contains(player)) {
             player.getInventory().addItem(new ItemStack(Material.COMPASS));
         }
     }
@@ -96,26 +45,35 @@ public class ManhuntGame implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        hunters.remove(player); //if player is not in hunters this does nothing.
+        teamManager.removeHunter(player);
     }
 
     public boolean startGame(CommandSender sender) {
-        if (!canGameStart()) {
-            MessageUtils.sendError("Hunter and runner teams are both not setup.", sender);
-            return false;
-        }
-        if (GAME_OPTION_RUNNER_ENFORCEMENT && hunters.contains(runner)) {
-            MessageUtils.sendError("Cannot start the game until no hunter is a runner.", sender);
-            return false;
-        }
+        if (!canGameStart(sender)) return false;
 
         //setup players
-        for (Player p : hunters) {
+        for (Player p : teamManager.hunterTeam) {
             p.getInventory().addItem(new ItemStack(Material.COMPASS));
         }
 
         messageAllPlayers("The game has started!", NamedTextColor.GREEN);
         startCompassUpdateTask();
+        return true;
+    }
+
+    private boolean canGameStart(CommandSender sender) {
+        if (!allTeamsAreSetup()) {
+            MessageUtils.sendError("Hunter and runner teams are both not setup.", sender);
+            return false;
+        }
+        if (optionManager.getBooleanOption(OptionConstants.PREVENT_TEAM_OVERLAP)) {
+            for (Player runner : teamManager.runnerTeam) {
+                if (teamManager.hunterTeam.contains(runner)) {
+                    MessageUtils.sendError("Cannot start the game until no hunter is a runner.", sender);
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -128,15 +86,24 @@ public class ManhuntGame implements Listener {
         if (taskId != -1) {
             Bukkit.getScheduler().cancelTask(taskId);
         }
+        Team runner = teamManager.runnerTeam;
+        Team hunters = teamManager.hunterTeam;
 
         taskId = new BukkitRunnable() {
             @Override
             public void run() {
-                if (runner != null) {
-                    Location loc = runner.getLocation();
-                    for (Player hunter : hunters) {
-                        hunter.setCompassTarget(loc);
+
+                if (!runner.isEmpty()) {
+                    Location loc = runner.get(0).getLocation();
+                    synchronized (hunters) {
+                        for (Player hunter : hunters) {
+                            if (hunter != null)
+                                hunter.setCompassTarget(loc);
+                        }
                     }
+                } else {
+                    stopGame(); //no runner
+                    messageAllPlayers("There is no longer a runner", NamedTextColor.RED);
                 }
             }
         }.runTaskTimer(plugin, 0L, 20L).getTaskId(); // Update every second (20 ticks)
@@ -149,15 +116,39 @@ public class ManhuntGame implements Listener {
         }
     }
 
-    public boolean canGameStart() {
-        return runner != null && hunters.size() != 0;
+    public boolean allTeamsAreSetup() {
+        return !teamManager.runnerTeam.isEmpty() && !teamManager.hunterTeam.isEmpty();
     }
 
     public void messageAllPlayers(String message, NamedTextColor color) {
-        Set<Audience> players = new HashSet<>(hunters);
-        if (runner != null) {
-            players.add(runner);
+        Set<Audience> players = new HashSet<>(teamManager.hunterTeam);
+        if (!teamManager.runnerTeam.isEmpty()) {
+            players.add(teamManager.runnerTeam.get(0));
         }
         MessageUtils.sendAllPlayersAMessage(message, players, color);
+    }
+
+    public List<String> getHunterNames() {
+        return teamManager.getHunterNames();
+    }
+
+    public String getRunnerName() {
+        return teamManager.getRunnerName();
+    }
+
+    public void addHunter(Player p) {
+        teamManager.addHunter(p);
+    }
+
+    public void removeRunner() {
+        teamManager.removeRunner();
+    }
+
+    public void removeHunter(Player p) {
+        teamManager.removeHunter(p);
+    }
+
+    public void setRunnerTeam(Player p) {
+        teamManager.setRunnerTeam(p);
     }
 }
