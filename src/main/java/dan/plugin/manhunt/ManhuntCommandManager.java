@@ -3,6 +3,7 @@ package dan.plugin.manhunt;
 import dan.plugin.manhunt.commands.*;
 import dan.plugin.manhunt.interfaces.SubCommand;
 import dan.plugin.manhunt.utils.CommandConstants;
+import dan.plugin.manhunt.utils.OptionManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
@@ -16,21 +17,21 @@ public class ManhuntCommandManager {
     private final Map<String, SubCommand> commands = new HashMap<>();
 
 
-    public ManhuntCommandManager(ManhuntGame game) {
+    public ManhuntCommandManager(ManhuntGame game, OptionManager optionManager) {
         this.manhuntGame = game;
-        registerCommands();
+        registerCommands(optionManager);
     }
 
-    private void registerCommands() {
-        commands.put(CommandConstants.START_MANHUNT, new StartManhuntCommand(manhuntGame));
-        commands.put(CommandConstants.STOP_MANHUNT, new StopManhuntCommand(manhuntGame));
-        commands.put(CommandConstants.MANHUNT_INFO, new ManhuntInfoCommand(manhuntGame));
-        commands.put(CommandConstants.RUNNER_ENFORCEMENT, new RunnerEnforcementCommand(manhuntGame));
-        commands.put(CommandConstants.ADD_HUNTER, new AddHunterCommand(manhuntGame));
-        commands.put(CommandConstants.REMOVE_HUNTER, new RemoveHunterCommand(manhuntGame));
-        commands.put(CommandConstants.SET_RUNNER, new SetRunnerCommand(manhuntGame));
-        commands.put(CommandConstants.REMOVE_RUNNER, new RemoveRunnerCommand(manhuntGame));
-        commands.put(CommandConstants.TEST, new TestManhuntCommand(manhuntGame));
+    private void registerCommands(OptionManager optionManager) {
+        commands.put(CommandConstants.START_MANHUNT, new StartManhuntCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.STOP_MANHUNT, new StopManhuntCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.MANHUNT_INFO, new ManhuntInfoCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.RUNNER_ENFORCEMENT, new RunnerEnforcementCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.ADD_HUNTER, new AddHunterCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.REMOVE_HUNTER, new RemoveHunterCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.SET_RUNNER, new SetRunnerCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.REMOVE_RUNNER, new RemoveRunnerCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.TEST, new TestManhuntCommand(manhuntGame, optionManager));
     }
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {

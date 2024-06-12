@@ -1,13 +1,14 @@
 package dan.plugin.manhunt.commands;
 
 import dan.plugin.manhunt.ManhuntGame;
+import dan.plugin.manhunt.utils.OptionManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 public class AddHunterCommand extends BaseManhuntCommand{
 
-    public AddHunterCommand(ManhuntGame game) {
-        super(game);
+    public AddHunterCommand(ManhuntGame game, OptionManager optionManager) {
+        super(game, optionManager);
     }
 
     @Override

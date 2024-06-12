@@ -1,7 +1,6 @@
 package dan.plugin.manhunt;
 
-import dan.plugin.manhunt.utils.MessageUtils;
-import dan.plugin.manhunt.utils.Team;
+import dan.plugin.manhunt.utils.*;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,14 +23,15 @@ public class ManhuntGame implements Listener {
 //    private final List<Player> hunters = new ArrayList<>();
     public final Team hunterTeam = new Team("hunters");
     public final Team runnerTeam = new Team("runner", 1);
+    public final OptionManager optionManager;
+//    public final ManhuntTeamManager teamManager = new ManhuntTeamManager();
 //    private Player runner = null;
     private int taskId = -1;
     public final Manhunt plugin;
 
-    public boolean GAME_OPTION_RUNNER_ENFORCEMENT = false;
-
-    public ManhuntGame(Manhunt plugin) {
+    public ManhuntGame(Manhunt plugin, OptionManager optionManager) {
         this.plugin = plugin;
+        this.optionManager = optionManager;
     }
 
     public List<String> getHunterNames() {
@@ -45,7 +45,7 @@ public class ManhuntGame implements Listener {
     }
 
     public void addHunter(Player p) {
-        if (GAME_OPTION_RUNNER_ENFORCEMENT) {
+        if (optionManager.getBooleanOption(OptionConstants.PREVENT_TEAM_OVERLAP)) {
             if (!runnerTeam.isEmpty() && runnerTeam.contains(p)) {
                 runnerTeam.clear();
                 MessageUtils.sendWarning("You are no longer the runner.", p);
@@ -79,7 +79,7 @@ public class ManhuntGame implements Listener {
         if (!runnerTeam.isEmpty() && !runnerTeam.get(0).equals(p)) {
             MessageUtils.sendWarning("You are being swapped for another runner.", runnerTeam.get(0));
         }
-        if (GAME_OPTION_RUNNER_ENFORCEMENT) {
+        if (optionManager.getBooleanOption(OptionConstants.PREVENT_TEAM_OVERLAP)) {
             if (hunterTeam.contains(p)) {
                 removeHunter(p);
             }
@@ -121,7 +121,7 @@ public class ManhuntGame implements Listener {
             MessageUtils.sendError("Hunter and runner teams are both not setup.", sender);
             return false;
         }
-        if (GAME_OPTION_RUNNER_ENFORCEMENT) {
+        if (optionManager.getBooleanOption(OptionConstants.PREVENT_TEAM_OVERLAP)) {
             for (Player runner : runnerTeam) {
                 if (hunterTeam.contains(runner)) {
                     MessageUtils.sendError("Cannot start the game until no hunter is a runner.", sender);

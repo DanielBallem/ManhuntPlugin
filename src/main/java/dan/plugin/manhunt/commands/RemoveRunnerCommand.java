@@ -2,13 +2,14 @@ package dan.plugin.manhunt.commands;
 
 import dan.plugin.manhunt.ManhuntGame;
 import dan.plugin.manhunt.utils.MessageUtils;
+import dan.plugin.manhunt.utils.OptionManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 public class RemoveRunnerCommand extends BaseManhuntCommand{
 
-    public RemoveRunnerCommand(ManhuntGame game) {
-        super(game);
+    public RemoveRunnerCommand(ManhuntGame game, OptionManager optionManager) {
+        super(game, optionManager);
     }
 
     @Override

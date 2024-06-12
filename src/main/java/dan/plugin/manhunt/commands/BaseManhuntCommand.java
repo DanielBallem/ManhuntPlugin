@@ -4,6 +4,7 @@ import dan.plugin.manhunt.ManhuntGame;
 import dan.plugin.manhunt.interfaces.PlayerAction;
 import dan.plugin.manhunt.interfaces.SubCommand;
 import dan.plugin.manhunt.utils.MessageUtils;
+import dan.plugin.manhunt.utils.OptionManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -12,8 +13,10 @@ import static org.bukkit.Bukkit.getServer;
 
 public abstract class BaseManhuntCommand implements SubCommand {
     protected final ManhuntGame manhuntGame;
-    public BaseManhuntCommand(ManhuntGame game) {
+    protected final OptionManager optionManager;
+    public BaseManhuntCommand(ManhuntGame game, OptionManager optionManager) {
         this.manhuntGame = game;
+        this.optionManager = optionManager;
     }
 
     protected boolean handlePlayerCommand(CommandSender sender, String[] args, PlayerAction action, String successMessage, String commandLabel) {
