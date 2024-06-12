@@ -26,7 +26,7 @@ public class ManhuntCommandManager {
         commands.put(CommandConstants.START_MANHUNT, new StartManhuntCommand(manhuntGame, optionManager));
         commands.put(CommandConstants.STOP_MANHUNT, new StopManhuntCommand(manhuntGame, optionManager));
         commands.put(CommandConstants.MANHUNT_INFO, new ManhuntInfoCommand(manhuntGame, optionManager));
-        commands.put(CommandConstants.RUNNER_ENFORCEMENT, new RunnerEnforcementCommand(manhuntGame, optionManager));
+        commands.put(CommandConstants.PREVENT_TEAM_OVERLAP_OPTION, new RunnerEnforcementCommand(manhuntGame, optionManager));
         commands.put(CommandConstants.ADD_HUNTER, new AddHunterCommand(manhuntGame, optionManager));
         commands.put(CommandConstants.REMOVE_HUNTER, new RemoveHunterCommand(manhuntGame, optionManager));
         commands.put(CommandConstants.SET_RUNNER, new SetRunnerCommand(manhuntGame, optionManager));

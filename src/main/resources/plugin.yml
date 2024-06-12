@@ -25,8 +25,8 @@ commands:
   manhuntInfo:
     description: Outputs the current list of players included in the game
     usage: /<command>
-  runnerEnforcement:
-    description: Option that controls if the runner can also be a hunter. (Use for testing purposes. 1 person :D ). Off by default.
+  preventTeamOverlap:
+    description: Enforces exclusivity between hunters and runner. Turned off by default
     usage: /<command> <true|false>
   test:
     description: Test scenario to go through the flow.
