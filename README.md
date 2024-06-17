@@ -1,5 +1,7 @@
 # Manhunt Plugin
 
+Allow you and your friends to set up and participate in your own Manhunt game! For those who are not familiar; the runner must kill the ender dragon while the hunters chase them. The hunters only get a compass that always points in the direction of the runner - everything else is up to them. 
+
 ## Functionality
 
 - Add/remove players to the hunter team or the runner team.
@@ -42,7 +44,3 @@ Messages notify the command sender and the affected players when they are added 
   - Team management classes.
 
   The aim is to make this plugin easy to extend and integrate into other projects, with clear distinctions between game-specific and generic utilities.
-
----
-
-**Note:** Is this over-engineered? Maybe. I feel like I didn't need the Team class per-say, but it could be nice to have in future projects. I definitely didn't over-engineer the command manager, being able to register a new command quickly and implement the functionality in an isolated, expected environment is pretty awesome. 
